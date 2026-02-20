@@ -1,4 +1,4 @@
-name: Correcao Programacao I
+name: Correcao Cartao Completa
 
 on:
   push:
@@ -8,24 +8,119 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Baixar repositorio
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Compilar
       run: |
         gcc -Wall -Wextra -Werror atividade.c -o programa
 
-    - name: Teste 1
+    - name: Executar e avaliar
       run: |
-        echo "3 5" | ./programa > saida.txt
-        diff -w saida.txt <(echo "8")
+        nota=0
 
-    - name: Teste 2
-      run: |
-        echo "10 20" | ./programa > saida.txt
-        diff -w saida.txt <(echo "30")
+        ./programa > saida.txt
+        output=$(cat saida.txt)
 
-    - name: Teste 3
-      run: |
-        echo "-5 5" | ./programa > saida.txt
-        diff -w saida.txt <(echo "0")
+        echo "Saída do aluno:"
+        echo "$output"
+
+        # ----------------------------
+        # TESTE 1 – Formato correto (2 pontos)
+        # ----------------------------
+        if echo "$output" | grep -Eq '^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{2}$'; then
+          nota=$((nota+2))
+          echo "Formato correto (+2)"
+        else
+          echo "Formato incorreto"
+          echo "Nota final: $nota/10"
+          exit 1
+        fi
+
+        # Remove traços
+        numero=$(echo "$output" | tr -d '-')
+
+        # ----------------------------
+        # TESTE 2 – Prefixo válido (2 pontos)
+        # ----------------------------
+        prefixo=${numero:0:4}
+        if [[ "$prefixo" == "5147" || "$prefixo" == "8914" || "$prefixo" == "6865" ]]; then
+          nota=$((nota+2))
+          echo "Prefixo válido (+2)"
+        else
+          echo "Prefixo inválido"
+        fi
+
+        # ----------------------------
+        # TESTE 3 – Validar primeiro dígito (3 pontos)
+        # ----------------------------
+        v1=0
+        for i in {0..3}; do
+          dig=${numero:$i:1}
+          peso=$((5-i))
+          v1=$((v1 + peso * dig))
+        done
+
+        for i in {4..11}; do
+          dig=${numero:$i:1}
+          peso=$((13-i))
+          v1=$((v1 + peso * dig))
+        done
+
+        v1=$((v1 % 11))
+        if [ $v1 -lt 2 ]; then
+          v1=0
+        else
+          v1=$((11 - v1))
+        fi
+
+        aluno_v1=${numero:12:1}
+
+        if [ "$v1" -eq "$aluno_v1" ]; then
+          nota=$((nota+3))
+          echo "Primeiro verificador correto (+3)"
+        else
+          echo "Primeiro verificador incorreto"
+        fi
+
+        # ----------------------------
+        # TESTE 4 – Validar segundo dígito (3 pontos)
+        # ----------------------------
+        v2=0
+
+        for i in {0..4}; do
+          dig=${numero:$i:1}
+          peso=$((6-i))
+          v2=$((v2 + peso * dig))
+        done
+
+        for i in {5..11}; do
+          dig=${numero:$i:1}
+          peso=$((14-i))
+          v2=$((v2 + peso * dig))
+        done
+
+        v2=$((v2 + 2*v1))
+        v2=$((v2 % 11))
+
+        if [ $v2 -lt 2 ]; then
+          v2=0
+        else
+          v2=$((11 - v2))
+        fi
+
+        aluno_v2=${numero:13:1}
+
+        if [ "$v2" -eq "$aluno_v2" ]; then
+          nota=$((nota+3))
+          echo "Segundo verificador correto (+3)"
+        else
+          echo "Segundo verificador incorreto"
+        fi
+
+        echo "----------------------------"
+        echo "Nota final: $nota/10"
+        echo "----------------------------"
+
+        if [ $nota -lt 10 ]; then
+          exit 1
+        fi
