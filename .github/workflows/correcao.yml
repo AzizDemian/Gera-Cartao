@@ -1,0 +1,31 @@
+name: Correcao Programacao I
+
+on:
+  push:
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar repositorio
+      uses: actions/checkout@v4
+
+    - name: Compilar
+      run: |
+        gcc -Wall -Wextra -Werror atividade.c -o programa
+
+    - name: Teste 1
+      run: |
+        echo "3 5" | ./programa > saida.txt
+        diff -w saida.txt <(echo "8")
+
+    - name: Teste 2
+      run: |
+        echo "10 20" | ./programa > saida.txt
+        diff -w saida.txt <(echo "30")
+
+    - name: Teste 3
+      run: |
+        echo "-5 5" | ./programa > saida.txt
+        diff -w saida.txt <(echo "0")
