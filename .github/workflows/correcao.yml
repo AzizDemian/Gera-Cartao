@@ -1,25 +1,12 @@
-name: Correcao Cartao Completa
-
-on:
-  push:
-
-jobs:
-  testar:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Compilar
-      run: |
-        gcc -Wall -Wextra -Werror atividade.c -o programa
-
     - name: Executar e avaliar
       run: |
         nota=0
 
-        ./programa > saida.txt
-        output=$(cat saida.txt)
+        ./programa > saida1.txt
+        sleep 1
+        ./programa > saida2.txt
+
+        output=$(cat saida1.txt)
 
         echo "Saída do aluno:"
         echo "$output"
@@ -36,7 +23,6 @@ jobs:
           exit 1
         fi
 
-        # Remove traços
         numero=$(echo "$output" | tr -d '-')
 
         # ----------------------------
@@ -51,7 +37,7 @@ jobs:
         fi
 
         # ----------------------------
-        # TESTE 3 – Validar primeiro dígito (3 pontos)
+        # TESTE 3 – Primeiro verificador (2 pontos)
         # ----------------------------
         v1=0
         for i in {0..3}; do
@@ -76,14 +62,14 @@ jobs:
         aluno_v1=${numero:12:1}
 
         if [ "$v1" -eq "$aluno_v1" ]; then
-          nota=$((nota+3))
-          echo "Primeiro verificador correto (+3)"
+          nota=$((nota+2))
+          echo "Primeiro verificador correto (+2)"
         else
           echo "Primeiro verificador incorreto"
         fi
 
         # ----------------------------
-        # TESTE 4 – Validar segundo dígito (3 pontos)
+        # TESTE 4 – Segundo verificador (2 pontos)
         # ----------------------------
         v2=0
 
@@ -111,16 +97,36 @@ jobs:
         aluno_v2=${numero:13:1}
 
         if [ "$v2" -eq "$aluno_v2" ]; then
-          nota=$((nota+3))
-          echo "Segundo verificador correto (+3)"
+          nota=$((nota+2))
+          echo "Segundo verificador correto (+2)"
         else
           echo "Segundo verificador incorreto"
+        fi
+
+        # ----------------------------
+        # TESTE 5 – Uso de rand() (1 ponto)
+        # ----------------------------
+        if grep -Eq '\brand\s*\(' atividade.c; then
+          nota=$((nota+1))
+          echo "Uso de rand() detectado (+1)"
+        else
+          echo "rand() não detectado"
+        fi
+
+        # ----------------------------
+        # TESTE 6 – Saída variável (1 ponto)
+        # ----------------------------
+        if ! diff saida1.txt saida2.txt > /dev/null; then
+          nota=$((nota+1))
+          echo "Saída variável detectada (+1)"
+        else
+          echo "Saída fixa"
         fi
 
         echo "----------------------------"
         echo "Nota final: $nota/10"
         echo "----------------------------"
 
-        if [ $nota -lt 10 ]; then
+        if [ $nota -lt 6 ]; then
           exit 1
         fi
